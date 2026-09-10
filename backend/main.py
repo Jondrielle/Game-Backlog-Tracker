@@ -1,4 +1,6 @@
-from fastapi import FastApi
+from fastapi import FastAPI
+from routes.games import game_router
 
-app = FastApi()
+app = FastAPI()
 
+app.include_router(game_router)
