@@ -4,19 +4,30 @@ from enums.enum import Platform, Status, Genre
 from sqlmodel import Session,select
 from database import get_session
 from models.game import Game
-from typing import List
+from typing import List,Optional
 
 game_router = APIRouter()
 
-# Retrieve all games
+# Retrieve all games filtered and unfiltered
 @game_router.get("/", response_model=List[GameRead])
-async def get_games(session: Session = Depends(get_session)):
+async def get_games(name: Optional[str] = None,status: Optional[Status]=None,genre: Optional[Genre]=None,
+					platform: Optional[Platform]=None, session: Session = Depends(get_session)):
 	statement = select(Game)
+
+	if name is not None:
+		statement = statement.where(Game.name.ilike(f"%{name}%"))
+
+	if status is not None:
+	    statement = statement.where(Game.status == status)
+
+	if genre is not None:
+	    statement = statement.where(Game.genre == genre)
+
+	if platform is not None:
+	    statement = statement.where(Game.platform == platform)
+
 	games = session.exec(statement).all()
 
-	if not games:
-		raise HTTPException(status_code=404,detail="List is empty")
-	
 	return games
 
 # Retrieve a single game
@@ -25,12 +36,7 @@ async def get_game(game_id:int,session: Session = Depends(get_session)):
 	statement = select(Game).where(Game.id == game_id)
 	game = session.exec(statement).first()
 
-	if game is None:
-		raise HTTPException(status_code=404,detail="Game not found")
-
 	return game
-
-# Retrieve a filtered game
 
 # Create a single game
 @game_router.post("/",response_model = GameRead)
