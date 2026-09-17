@@ -11,23 +11,24 @@ game_router = APIRouter()
 # Retrieve all games filtered and unfiltered
 @game_router.get("/", response_model=List[GameRead])
 async def get_games(name: Optional[str] = None,status: Optional[Status]=None,genre: Optional[Genre]=None,
-					platform: Optional[Platform]=None, session: Session = Depends(get_session)):
+					platform: Optional[Platform]=None, session: Session = Depends(get_session),
+					skip: int=0, limit:int=10):
 	statement = select(Game)
 
+	# Filters
 	if name is not None:
 		statement = statement.where(Game.name.ilike(f"%{name}%"))
-
 	if status is not None:
 	    statement = statement.where(Game.status == status)
-
 	if genre is not None:
 	    statement = statement.where(Game.genre == genre)
-
 	if platform is not None:
 	    statement = statement.where(Game.platform == platform)
+	
+	# Pagnation
+	statement = statement.offset(skip).limit(limit)
 
 	games = session.exec(statement).all()
-
 	return games
 
 # Retrieve a single game
