@@ -13,7 +13,7 @@ class GameBase(BaseModel):
 	release_date: date
 	date_completed: Optional[date] = None
 
-class Game(GameBase):
+class GameRead(GameBase):
 	id: int
 
 class CreateGame(GameBase):
