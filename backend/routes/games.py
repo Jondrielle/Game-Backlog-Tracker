@@ -8,9 +8,9 @@ from typing import List
 
 game_router = APIRouter()
 
-
+# Retrieve all games
 @game_router.get("/", response_model=List[GameRead])
-async def get_game(session: Session = Depends(get_session)):
+async def get_games(session: Session = Depends(get_session)):
 	statement = select(Game)
 	games = session.exec(statement).all()
 
@@ -19,6 +19,20 @@ async def get_game(session: Session = Depends(get_session)):
 	
 	return games
 
+# Retrieve a single game
+@game_router.get("/game/{game_id}", response_model=GameRead)
+async def get_game(game_id:int,session: Session = Depends(get_session)):
+	statement = select(Game).where(Game.id == game_id)
+	game = session.exec(statement).first()
+
+	if game is None:
+		raise HTTPException(status_code=404,detail="Game not found")
+
+	return game
+
+# Retrieve a filtered game
+
+# Create a single game
 @game_router.post("/",response_model = GameRead)
 async def create_game(game:CreateGame,session: Session = Depends(get_session)):
 
@@ -39,6 +53,7 @@ async def create_game(game:CreateGame,session: Session = Depends(get_session)):
 
 	return new_game
 
+# Delete a single game
 @game_router.delete("/game/{game_id}")
 async def delete_game(game_id: int, session: Session = Depends(get_session)):
 	statement = select(Game).where(Game.id == game_id)
@@ -46,11 +61,25 @@ async def delete_game(game_id: int, session: Session = Depends(get_session)):
 	
 	if game is None:
 		raise HTTPException(status_code=404,detail="Game not found")
-		
+
 	session.delete(game)
 	session.commit()
 	return {"message": "Game Deleted Successfully"}
 
+# Clear games
+@game_router.delete("/game")
+async def clear(session: Session = Depends(get_session)):
+	statement = select(Game)
+	games = session.exec(statement).all()
+
+	for game in games:
+		session.delete(game)
+	
+	session.commit()
+
+	return {"message": "List Cleared"}
+
+# Update a game
 @game_router.patch("/game/{game_id}", response_model = GameRead)
 async def update_game(game_id: int, updated_game: UpdateGame, session: Session = Depends(get_session)):
 	statement = select(Game).where(Game.id == game_id)
