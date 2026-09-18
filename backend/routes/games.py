@@ -37,6 +37,9 @@ async def get_game(game_id:int,session: Session = Depends(get_session)):
 	statement = select(Game).where(Game.id == game_id)
 	game = session.exec(statement).first()
 
+	if game is None:
+		raise HTTPException(status_code=404,detail="Game not found")
+		
 	return game
 
 # Create a single game
