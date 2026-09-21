@@ -38,6 +38,42 @@ async function getGame(id){
   }
 }
 
+//Finished
+async function addGame(game){
+  try{
+    const response = await fetch("http://127.0.0.1:8000/",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
+      body: JSON.stringify({
+        name:game.name,
+        status:game.status,
+        rating:game.rating,
+        notes:game.notes,
+        platform:game.platform,
+        genre:ame.genre,
+        release_date:game.release_date,
+        date_compleleted:game.date_completed
+      })
+    })
+
+    if(!response.ok){
+      throw new Error(`Response Error: ${response.status}`)
+    }
+
+    const result = await response.json()
+
+    games.value.push(result)
+
+  }catch(err){
+    console.log(err)
+  }
+}
+
+//Finished
 async function deleteGame(id){
   try{
     const response = await fetch(`http://127.0.0.1:8000/game/${id}`,{
@@ -59,6 +95,7 @@ async function deleteGame(id){
   }
 }
 
+// Finished
 async function clear(){
   try{
     const response = await fetch("http://127.0.0.1:8000/game",{
