@@ -4,9 +4,34 @@ import GameItem from "./components/GameItem.vue"
 
 const games = ref([])
 
+//filter params
+const selectedGenre = ref(null)
+const selectedStatus = ref(null)
+const selectedPlatform = ref(null)
+const searchName = ref("")
+
 async function getGames(){
   try{
-    const response = await fetch("http://127.0.0.1:8000/")
+
+    const params = new URLSearchParams()
+
+    if(selectedGenre.value){
+      params.append("genre",selectedGenre.value)
+    }
+
+    if(selectedStatus.value){
+      params.append("status",selectedStatus.value)
+    }
+
+    if(selectedPlatform.value){
+      params.append("platform",selectedPlatform.value)
+    }
+
+    if(searchName.value){
+      params.append("name",searchName.value)
+    }
+
+    const response = await fetch(`http://127.0.0.1:8000/?${params.toString()}`)
 
     if(!response.ok){
       throw new Error(`Response status: ${response.status}`)
@@ -30,7 +55,7 @@ async function getGame(id){
       throw new Error(`Response Error:${response.status}`)
     }
 
-    result = await response.json()
+    const result = await response.json()
 
     console.log(result)
   }catch(err){
@@ -38,7 +63,6 @@ async function getGame(id){
   }
 }
 
-//Finished
 async function addGame(game){
   try{
     const response = await fetch("http://127.0.0.1:8000/",
@@ -54,9 +78,9 @@ async function addGame(game){
         rating:game.rating,
         notes:game.notes,
         platform:game.platform,
-        genre:ame.genre,
+        genre:game.genre,
         release_date:game.release_date,
-        date_compleleted:game.date_completed
+        date_completed:game.date_completed
       })
     })
 
@@ -73,7 +97,6 @@ async function addGame(game){
   }
 }
 
-//Finished
 async function deleteGame(id){
   try{
     const response = await fetch(`http://127.0.0.1:8000/game/${id}`,{
@@ -87,7 +110,7 @@ async function deleteGame(id){
 
     const result = await response.json()
 
-    games.value = games.value.filter(game => game.id != id)
+    games.value = games.value.filter(game => game.id !== id)
 
 
   }catch(err){
@@ -95,7 +118,6 @@ async function deleteGame(id){
   }
 }
 
-// Finished
 async function clear(){
   try{
     const response = await fetch("http://127.0.0.1:8000/game",{
@@ -114,9 +136,29 @@ async function clear(){
   }
 }
 
-async function updateGame(){
+async function updateGame(id,updatedGame){
+  try{
+    const response = await fetch(`http://127.0.0.1:8000/${id}`,{
+      method:"PATCH",
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
+      body: JSON.stringify(updatedGame)
+    })
+
+    if(!response.ok){
+      throw new Error(`Response status: ${response.status}`)
+    }
+
+    await response.json()
   
+    await getGames()
+  }catch(err){
+    console.error(err)
+  }
 }
+
 </script>
 
 <template>
