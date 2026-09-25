@@ -6,6 +6,10 @@ import GameForm from "./components/GameForm.vue"
 //data
 const games = ref([])
 
+//pagination
+const currentPage = ref(1)
+const pageSize = 10
+
 //filter params
 const selectedGenre = ref(null)
 const selectedStatus = ref(null)
@@ -49,6 +53,10 @@ async function getGames(){
     if(searchName.value){
       params.append("name",searchName.value)
     }
+
+    params.append("skip",(currentPage.value-1) * pageSize)
+
+    params.append("limit", pageSize)
 
     console.log(params.toString())
 
@@ -262,6 +270,18 @@ async function clearFilters(){
   await getGames()
 }
 
+async function nextPage(){
+  currentPage.value++
+  await getGames()
+}
+
+async function previousPage(){
+  if(currentPage.value > 1){
+    currentPage.value--
+    await getGames()
+  }
+}
+
 onMounted(()=>{
   getGames()
 })
@@ -336,8 +356,19 @@ onMounted(()=>{
     @submit="handleSubmit"
   />
 
-  //Pagination
 
+  <button
+    @click="previousPage"
+    :disabled="currentPage === 1"
+  >
+    Previous
+  </button>
+
+  <span>Page {{ currentPage }}</span>
+
+  <button @click="nextPage">
+    Next
+  </button>
 </template>
 
 <style scoped></style>
