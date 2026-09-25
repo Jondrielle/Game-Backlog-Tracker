@@ -51,7 +51,7 @@ async function getGames(){
     }
 
     console.log(params.toString())
-    
+
     const response = await fetch(`http://127.0.0.1:8000/?${params.toString()}`)
 
     if(!response.ok){
@@ -120,6 +120,7 @@ async function addGame(game){
     games.value.push(result)
 
     formGame.value={
+      id:null,
       name:"",
       status:"",
       rating:null,
@@ -168,7 +169,7 @@ async function clear(){
 
     console.log("List cleared")
 
-    getGames()
+    await getGames()
   }catch(err){
     console.error(err)
   }
@@ -207,8 +208,6 @@ async function updateGame(updatedGame){
     date_completed: null
   })
 
-  closeForm()
-
   }catch(err){
     console.error(err)
   }
@@ -244,14 +243,23 @@ function openForm(){
   showForm.value = true
 }
 
-function handleSubmit(game){
+async function handleSubmit(game){
   if(isEditing.value){
-    updateGame(game)
+    await updateGame(game)
   }else{
-    addGame(game)
+    await addGame(game)
   }
 
   closeForm()
+}
+
+async function clearFilters(){
+  searchName.value = ""
+  selectedStatus.value = null
+  selectedGenre.value = null
+  selectedPlatform.value = null
+
+  await getGames()
 }
 
 onMounted(()=>{
@@ -263,9 +271,51 @@ onMounted(()=>{
 <template>
   <h1>Game Backlog Tracker</h1>
 
-    <input v-model="searchName">
-    <button @click="getGames">Search</button>
+  <div>
 
+    <input v-model="searchName" placeholder="Search games...">
+
+    <select v-model="selectedStatus">
+      <option :value="null">All Statuses</option>
+      <option value="Backlog">Backlog</option>
+      <option value="Playing">Playing</option>
+      <option value="Completed">Completed</option>
+      <option value="Dropped">Dropped</option>
+    </select>
+
+    <select v-model="selectedGenre">
+      <option :value="null">All Genres</option>
+      <option value="Action">Action</option>
+      <option value="Adventure">Adventure</option>
+      <option value="RPG">RPG</option>
+      <option value="Strategy">Strategy</option>
+      <option value="Simulation">Simulation</option>
+      <option value="Sports">Sports</option>
+      <option value="Racing">Racing</option>
+      <option value="Puzzle">Puzzle</option>
+      <option value="Horror">Horror</option>
+      <option value="Platformer">Platformer</option>
+      <option value="Shooter">Shooter</option>
+      <option value="Fighting">Fighting</option>
+    </select>
+
+    <select v-model="selectedPlatform">
+      <option :value="null">All Platforms</option>
+      <option value="PC">PC</option>
+      <option value="PlayStation">PlayStation</option>
+      <option value="Xbox">Xbox</option>
+      <option value="Switch">Switch</option>
+    </select>
+
+    <button @click="getGames">
+      Apply Filters
+    </button>
+
+    <button @click="clearFilters">
+      Clear Filters
+    </button>
+
+  </div>
     <GameItem
       v-for="game in games"
       :key="game.id"
@@ -285,6 +335,8 @@ onMounted(()=>{
     @cancel="closeForm"
     @submit="handleSubmit"
   />
+
+  //Pagination
 
 </template>
 
