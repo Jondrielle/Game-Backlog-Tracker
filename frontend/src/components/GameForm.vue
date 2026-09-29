@@ -20,14 +20,17 @@ function submit(){
 <template>
 	<h2>Form</h2>
 
-	<form @submit.prevent="submit">
+	<form @submit.prevent="submit" class="form">
 		<input
 			v-model="game.name"
 			placeholder="Game Title"
 			type="text"
 		/>
 
-		<select v-model="game.status">
+		<label for="status">Status</label>
+		<select 
+		id="status"
+		v-model="game.status">
 			<option disabled value="">Select status</option>
 			<option value="Backlog">Backlog</option>
 			<option value="Playing">Playing</option>
@@ -35,7 +38,10 @@ function submit(){
 			<option value="Dropped">Dropped</option>
 		</select>
 
-		<select v-model="game.platform">
+		<label for="platform">Platform</label>
+		<select 
+		id="platform"
+		v-model="game.platform">
 			<option disabled value="">Select Platform</option>
 			<option value="PC">PC</option>
 			<option value="PlayStation">PlayStation</option>
@@ -43,7 +49,10 @@ function submit(){
 			<option value="Switch">Switch</option>
 		</select>
 
-		<select v-model="game.genre">
+		<label for="genre">Genre</label>
+		<select 
+		id="genre"
+		v-model="game.genre">
 			<option disabled value="">Select Genre</option>
 			<option value="Action">Action</option>
 			<option value="Adventure">Adventure</option>
@@ -89,3 +98,17 @@ function submit(){
 
 	</form>
 </template>
+
+<style scoped>
+
+	.form{
+		display:flex;
+		flex-direction:column;
+		gap:10px;
+	}
+
+	.form > select{
+		display:grid;
+		grid-template-columns:repeat(3,1fr);
+	}
+</style>

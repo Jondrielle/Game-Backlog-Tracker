@@ -271,7 +271,7 @@ async function clearFilters(){
   selectedPlatform.value = null
 
   currentPage.value = 1
-  
+
   await getGames()
 }
 
@@ -296,9 +296,10 @@ onMounted(()=>{
 </script>
 
 <template>
-  <h1>Game Backlog Tracker</h1>
+  <h1 class="title">Game Backlog Tracker</h1>
 
-  <div>
+
+  <div class="container">
 
     <input v-model="searchName" placeholder="Search games...">
 
@@ -343,6 +344,7 @@ onMounted(()=>{
     </button>
 
   </div>
+
     <GameItem
       v-for="game in games"
       :key="game.id"
@@ -351,9 +353,14 @@ onMounted(()=>{
       @delete="deleteGame"
     />
 
-  <button @click="clear">Clear List</button>
-
-  <button @click="openForm">Open Add Form</button>
+  <div class="functions">
+    <span>
+      <button @click="clear">Clear List</button>
+    </span>
+    <span>
+      <button @click="openForm">Open Add Form</button>
+    </span>
+  </div>
 
   <GameForm
     v-if="showForm"
@@ -363,22 +370,58 @@ onMounted(()=>{
     @submit="handleSubmit"
   />
 
+  <div class="pagination">
+    <span>
+      <button
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        Previous
+      </button>
+    </span>
 
-  <button
-    @click="previousPage"
-    :disabled="currentPage === 1"
-  >
-    Previous
-  </button>
+    <span>Page {{ currentPage }}</span>
 
-  <span>Page {{ currentPage }}</span>
-
-  <button 
-    @click="nextPage"
-    :disabled="currentPage * pageSize >= totalGames"
-  >
-    Next
-  </button>
+    <span>
+      <button 
+        @click="nextPage"
+        :disabled="currentPage * pageSize >= totalGames"
+      >
+        Next
+      </button>
+    </span>
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+  .title{
+    flex-direction:column;
+    text-align:center;
+  }
+
+  .pagination{
+    padding-top:25px;
+    display: grid;
+    grid-template-columns:repeat(3,1fr)
+  }
+
+  .container{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    padding-bottom:20px;
+  }
+
+  .container > input{
+    border-radius:5px;
+    border-color:light-gray;
+    padding-bottom:10px;
+  }
+
+  .functions{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    text-align:center;
+  }
+
+</style>

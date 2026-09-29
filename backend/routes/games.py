@@ -14,7 +14,6 @@ game_router = APIRouter()
 async def get_games(name: Optional[str] = None,status: Optional[Status]=None,genre: Optional[Genre]=None,
 					platform: Optional[Platform]=None, session: Session = Depends(get_session),
 					skip: int=0, limit:int=10):
-	statement = select(Game)
 
 	# Build the query for the games
 	statement = select(Game)
