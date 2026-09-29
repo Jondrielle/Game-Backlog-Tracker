@@ -2,6 +2,7 @@ from fastapi import APIRouter,Depends,HTTPException
 from schemas.game import GameBase,CreateGame,GameRead,UpdateGame
 from enums.enum import Platform, Status, Genre
 from sqlmodel import Session,select
+from sqlalchemy import func
 from database import get_session
 from models.game import Game
 from typing import List,Optional
@@ -9,27 +10,70 @@ from typing import List,Optional
 game_router = APIRouter()
 
 # Retrieve all games filtered and unfiltered
-@game_router.get("/", response_model=List[GameRead])
+@game_router.get("/")
 async def get_games(name: Optional[str] = None,status: Optional[Status]=None,genre: Optional[Genre]=None,
 					platform: Optional[Platform]=None, session: Session = Depends(get_session),
 					skip: int=0, limit:int=10):
 	statement = select(Game)
 
-	# Filters
+	# Build the query for the games
+	statement = select(Game)
+
 	if name is not None:
-		statement = statement.where(Game.name.ilike(f"%{name}%"))
+		statement = statement.where(
+			Game.name.ilike(f"%{name}%")
+		)
+
 	if status is not None:
-	    statement = statement.where(Game.status == status)
+		statement = statement.where(
+			Game.status == status
+		)
+
 	if genre is not None:
-	    statement = statement.where(Game.genre == genre)
+		statement = statement.where(
+			Game.genre == genre
+		)
+
 	if platform is not None:
-	    statement = statement.where(Game.platform == platform)
-	
-	# Pagnation
+		statement = statement.where(
+			Game.platform == platform
+		)
+
+	# Count how many games match the filters
+	count_statement = select(func.count()).select_from(Game)
+
+	if name is not None:
+		count_statement = count_statement.where(
+			Game.name.ilike(f"%{name}%")
+		)
+
+	if status is not None:
+		count_statement = count_statement.where(
+			Game.status == status
+		)
+
+	if genre is not None:
+		count_statement = count_statement.where(
+			Game.genre == genre
+		)
+
+	if platform is not None:
+		count_statement = count_statement.where(
+			Game.platform == platform
+		)
+
+	total = session.exec(count_statement).one()
+
+	# Get only the games for the requested page
 	statement = statement.offset(skip).limit(limit)
 
 	games = session.exec(statement).all()
-	return games
+
+	return {
+		"games": games,
+		"total": total
+	}
+
 
 # Retrieve a single game
 @game_router.get("/game/{game_id}", response_model=GameRead)
