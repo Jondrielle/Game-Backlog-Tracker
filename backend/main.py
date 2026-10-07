@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routes.games import game_router
+from routes.igdb import router as igdb_router
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from models.game import Game
@@ -23,3 +24,4 @@ app.add_middleware(
 SQLModel.metadata.create_all(engine)
 
 app.include_router(game_router)
+app.include_router(igdb_router)
