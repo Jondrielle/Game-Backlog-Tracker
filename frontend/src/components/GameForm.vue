@@ -56,11 +56,11 @@ function submit(){
 			</div>
 
 			<div class="form-group">
-				<label for="genre">Genre</label>
+				<label for="genre">Genres</label>
 				<select 
 				id="genre"
-				v-model="game.genre">
-					<option disabled value="">Select Genre</option>
+				v-model="game.genres"
+				multiple>
 					<option value="Action">Action</option>
 					<option value="Adventure">Adventure</option>
 					<option value="RPG">RPG</option>

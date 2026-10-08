@@ -2,10 +2,20 @@
 import {ref,onMounted} from 'vue'
 import GameItem from "./components/GameItem.vue"
 import GameForm from "./components/GameForm.vue"
+import {auth} from "./firebase"
+import {createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,sendPasswordResetEmail,sendEmailVerification } from "firebase/auth";
 
 //data
 const games = ref([])
 
+//igdb data
+const igdbSearch = ref("")
+const igdbResults = ref([])
+const selectedIGDBGame = ref(null)
+
+//authenication 
+const userEmail = ref("")
+const password = ref("")
 
 //pagination
 const currentPage = ref(1)
@@ -26,7 +36,7 @@ const formGame = ref({
   rating: null,
   notes: "",
   platform: "",
-  genre: "",
+  genres: [],
   release_date: "",
   date_completed: null
 })
@@ -111,7 +121,7 @@ async function addGame(game){
         rating:game.rating,
         notes:game.notes,
         platform:game.platform,
-        genre:game.genre,
+        genres:game.genres,
         release_date:game.release_date,
         date_completed:game.date_completed
       })
@@ -137,7 +147,7 @@ async function addGame(game){
       rating:null,
       notes:"",
       platform:"",
-      genre:"",
+      genres:[],
       release_date:"",
       date_completed:null
     }
@@ -214,7 +224,7 @@ async function updateGame(updatedGame){
     rating: null,
     notes: "",
     platform: "",
-    genre: "",
+    genres: [],
     release_date: "",
     date_completed: null
   })
@@ -225,8 +235,11 @@ async function updateGame(updatedGame){
 }
 
 function startEdit(game){
-  formGame.value = {...game}
-  
+  formGame.value = {
+    ...game,
+    genres: [...game.genres]
+  }
+
   isEditing.value = true
   showForm.value = true
 }
@@ -246,7 +259,7 @@ function openForm(){
     rating: null,
     notes: "",
     platform: "",
-    genre: "",
+    genres: [],
     release_date: "",
     date_completed: null
   }
@@ -289,6 +302,58 @@ async function previousPage(){
   }
 }
 
+async function signUp(){
+  console.log(userEmail.value)
+  console.log(password.value)
+  try{
+    const userCredential = await createUserWithEmailAndPassword(auth,userEmail.value,password.value)
+
+    await sendEmailVerification(userCredential.user)
+    console.log(userCredential.user)
+
+
+    console.log("User created")
+  }catch(err){
+    console.error(err)
+  }
+
+  userEmail.value = ""
+  password.value = ""
+}
+
+async function login(){
+  try{
+    const userCredential = await signInWithEmailAndPassword(auth,userEmail.value,password.value)
+
+    console.log(userCredential.user)
+
+    console.log("Login Successful")
+
+  }catch(err){
+    console.error(err)
+  }
+
+  userEmail.value = ""
+  password.value = ""
+}
+
+async function logOut(){
+  try{
+    await signOut(auth)
+    console.log("Sign out successful")
+  }catch(err){
+    console.error(err)
+  }
+}
+
+async function resetPassword(){
+  try{
+    await sendPasswordResetEmail(auth,userEmail.value)
+  }catch(err){
+    console.error(err)
+  }
+}
+
 onMounted(()=>{
   getGames()
 })
@@ -298,6 +363,43 @@ onMounted(()=>{
 <template>
   <h1 class="title">Game Backlog Tracker</h1>
 
+  <div class="signUp">
+    <h2>User Profile</h2>
+    Enter Email:
+    <input 
+      v-model="userEmail"
+      placeholder="Email"/>
+
+    Enter Password:
+    <input 
+      v-model="password"
+      placeholder="Password"/>
+
+    <button @click="signUp">Sign Up</button>
+   
+  </div>
+
+  <div class="login">
+    <h2>Login</h2>
+    Enter email:
+    <input
+      v-model="userEmail"
+      placeholder="Email"/>
+    Enter Password:
+    <input
+      v-model="password"
+      placeholder="Password"/>
+
+    <button @click="login">Login</button>
+  </div> 
+
+  <div class="signOut">
+    <button @click="logOut">Sign Out</button>
+  </div> 
+
+  <div>
+    <button @click="resetPassword">Forgot Password</button>
+  </div>
 
   <div class="container">
 

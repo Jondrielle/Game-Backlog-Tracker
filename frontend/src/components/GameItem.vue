@@ -19,7 +19,7 @@ function editGame(){
 <h1>{{game.name}}</h1>
 <div>
 	Status:{{game.status}}
-	Genre:{{game.genre}}
+	Genres: {{ game.genres?.join(", ") || "None" }}
 	Rating:{{game.rating}}
 	Platform:{{game.platform}}
 	Notes:{{game.notes}}
