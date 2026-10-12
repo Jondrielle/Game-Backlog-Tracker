@@ -432,7 +432,13 @@ onMounted(()=>{
 
 <template>
   <h1 class="title">Game Backlog Tracker</h1>
-  <AuthForm/>
+  <AuthForm
+    :email="userEmail"
+    :password="userPassword"
+    @login="login"
+    @signUp="signUp"
+    @reset="resetPassword"
+  />
 
   <div class="signOut" v-if="userSignedIn">
     <button @click="logOut">Sign Out</button>

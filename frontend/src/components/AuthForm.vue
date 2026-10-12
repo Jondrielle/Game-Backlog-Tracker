@@ -1,18 +1,22 @@
+<script setup>
 import {ref} from "vue"
 
-<script setup>
 
-const userEmail = ref("")
-const userPassword = ref("")
+const email = ref("")
+const password = ref("")
 
-const emit = DefineEmits({login,signup,reset})
+const props = defineProps({
+	
+})
+
+const emit = defineEmits(["login","signup","reset"])
 
 function login(){
-	emit("login")
+	emit("login",email,password)
 }
 
 function signUp(){
-	emit("signup")	
+	emit("signup",email,password)	
 }
 
 function reset(){
@@ -28,32 +32,36 @@ function reset(){
 		<div class="login">
 			<h3>Login</h3>
 
-			Enter email:
 		    <input
-		      v-model="userEmail"
-		      placeholder="Email"/>
+		      v-model="email"
+		      placeholder="Enter your email"/>
 
-		    Enter Password:
 		    <input
 		      v-model="password"
-		      placeholder="Password"/>
+		      placeholder="Enter your password"/>
 
 		    <button @click="login">Login</button>
 
-		    <button @click="resetPassword">Forgot Password</button>
+		    <button @click="reset">Forgot password?</button>
+		    
 		</div>
 
 		<div class="signup">
 			<h2>Create Account</h2>
-		    Enter Email:
 		    <input 
-		      v-model="userEmail"
-		      placeholder="Email"/>
+		    	v-model="email"
+		    	placeholder="Enter your email"/>
 
-		    Enter Password:
 		    <input 
-		      v-model="password"
-		      placeholder="Password"/>
+		    	type="password"
+		    	v-model="password"
+		    	placeholder="Create password"/>
+
+		    <input
+		    	type="password"
+		    	v-model="password"
+		    	placeholder="Confirm your password"
+		    	hidden="true"/>
 
 		    <button @click="signUp">Sign Up</button>
 		</div>
@@ -70,19 +78,21 @@ function reset(){
 	}
 
 	.login{
+		display:flex;
+		flex-direction:column;
   		border: 1px solid red;
 		border-radius:5px;
 		border-color:red;
-		padding: 30px 40px 40px;
-		width: max-screen-width/2;
+		gap:10px;
 	}
 
 	.signup{
+		display:flex;
+		flex-direction:column;
 		border: 1px solid red;
 		border-radius:5px;
 		border-color:red;
-		padding: 30px 40px 40px;
-		width: max-screen-width/2;
+		gap:10px;
 	}
 
 	.signup > input{
