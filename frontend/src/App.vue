@@ -3,7 +3,7 @@ import {ref,onMounted} from 'vue'
 import GameItem from "./components/GameItem.vue"
 import GameForm from "./components/GameForm.vue"
 import {auth} from "./firebase"
-import {createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,sendPasswordResetEmail,sendEmailVerification } from "firebase/auth";
+import {createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,sendPasswordResetEmail,sendEmailVerification,deleteUser} from "firebase/auth";
 
 //data
 const games = ref([])
@@ -302,39 +302,67 @@ async function previousPage(){
   }
 }
 
-async function signUp(){
-  console.log(userEmail.value)
-  console.log(password.value)
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth,userEmail.value,password.value)
+async function signUp() {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      userEmail.value,
+      password.value
+    );
 
-    await sendEmailVerification(userCredential.user)
-    console.log(userCredential.user)
+    await sendEmailVerification(userCredential.user);
 
+    const token = await userCredential.user.getIdToken();
 
-    console.log("User created")
-  }catch(err){
-    console.error(err)
+    const response = await fetch("http://127.0.0.1:8000/auth/signup", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    console.log("User created and backend user registered");
+  } catch (err) {
+    console.error(err);
+  } finally {
+    userEmail.value = "";
+    password.value = "";
   }
-
-  userEmail.value = ""
-  password.value = ""
 }
 
-async function login(){
-  try{
-    const userCredential = await signInWithEmailAndPassword(auth,userEmail.value,password.value)
+async function login() {
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      userEmail.value,
+      password.value
+    );
 
-    console.log(userCredential.user)
+    const token = await userCredential.user.getIdToken();
 
-    console.log("Login Successful")
+    const response = await fetch("http://127.0.0.1:8000/auth/me", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  }catch(err){
-    console.error(err)
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const user = await response.json();
+    console.log("Login successful", user);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    userEmail.value = "";
+    password.value = "";
   }
-
-  userEmail.value = ""
-  password.value = ""
 }
 
 async function logOut(){
@@ -349,9 +377,38 @@ async function logOut(){
 async function resetPassword(){
   try{
     await sendPasswordResetEmail(auth,userEmail.value)
+    console.log("Password reset sent")
   }catch(err){
     console.error(err)
   }
+}
+
+async function deleteAccount(){
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("No user is signed in");
+  }
+
+  const token = await user.getIdToken();
+
+  const response = await fetch(
+    "http://127.0.0.1:8000/auth/deleteAccount",
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  console.log("User Account Deleted Successfully")
+  
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  await signOut(auth);
 }
 
 onMounted(()=>{
@@ -400,6 +457,10 @@ onMounted(()=>{
   <div>
     <button @click="resetPassword">Forgot Password</button>
   </div>
+
+  <div class="deleteAccount">
+    <button @click="deleteAccount">Delete Account</button>
+  </div> 
 
   <div class="container">
 

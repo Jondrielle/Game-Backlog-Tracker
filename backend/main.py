@@ -1,9 +1,15 @@
 from fastapi import FastAPI
+
 from routes.games import game_router
 from routes.igdb import router as igdb_router
+from routes.auth import auth_router
+
+from firebase_setup import firebase_app
 from fastapi.middleware.cors import CORSMiddleware
+
 from database import engine
 from models.game import Game
+from models.user import User
 from sqlmodel import SQLModel
 
 app = FastAPI()
@@ -25,3 +31,4 @@ SQLModel.metadata.create_all(engine)
 
 app.include_router(game_router)
 app.include_router(igdb_router)
+app.include_router(auth_router)
