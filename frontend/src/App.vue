@@ -1,7 +1,10 @@
 <script setup>
 import {ref,onMounted} from 'vue'
+
 import GameItem from "./components/GameItem.vue"
 import GameForm from "./components/GameForm.vue"
+import AuthForm from "./components/AuthForm.vue"
+
 import {auth} from "./firebase"
 import {createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,sendPasswordResetEmail,sendEmailVerification,deleteUser} from "firebase/auth";
 
@@ -16,6 +19,7 @@ const selectedIGDBGame = ref(null)
 //authenication 
 const userEmail = ref("")
 const password = ref("")
+const userSignedIn = ref(false)
 
 //pagination
 const currentPage = ref(1)
@@ -314,6 +318,7 @@ async function signUp() {
 
     const token = await userCredential.user.getIdToken();
 
+
     const response = await fetch("http://127.0.0.1:8000/auth/signup", {
       method: "POST",
       headers: {
@@ -324,6 +329,8 @@ async function signUp() {
     if (!response.ok) {
       throw new Error(await response.text());
     }
+
+    userSignedIn.value = true
 
     console.log("User created and backend user registered");
   } catch (err) {
@@ -356,6 +363,8 @@ async function login() {
     }
 
     const user = await response.json();
+    userSignedIn.value = true
+
     console.log("Login successful", user);
   } catch (err) {
     console.error(err);
@@ -369,6 +378,8 @@ async function logOut(){
   try{
     await signOut(auth)
     console.log("Sign out successful")
+
+    userSignedIn.value = false
   }catch(err){
     console.error(err)
   }
@@ -403,12 +414,14 @@ async function deleteAccount(){
   );
 
   console.log("User Account Deleted Successfully")
-  
+
   if (!response.ok) {
     throw new Error(await response.text());
   }
 
   await signOut(auth);
+
+  userSignedIn.value = false
 }
 
 onMounted(()=>{
@@ -419,50 +432,18 @@ onMounted(()=>{
 
 <template>
   <h1 class="title">Game Backlog Tracker</h1>
+  <AuthForm/>
 
-  <div class="signUp">
-    <h2>User Profile</h2>
-    Enter Email:
-    <input 
-      v-model="userEmail"
-      placeholder="Email"/>
-
-    Enter Password:
-    <input 
-      v-model="password"
-      placeholder="Password"/>
-
-    <button @click="signUp">Sign Up</button>
-   
-  </div>
-
-  <div class="login">
-    <h2>Login</h2>
-    Enter email:
-    <input
-      v-model="userEmail"
-      placeholder="Email"/>
-    Enter Password:
-    <input
-      v-model="password"
-      placeholder="Password"/>
-
-    <button @click="login">Login</button>
-  </div> 
-
-  <div class="signOut">
+  <div class="signOut" v-if="userSignedIn">
     <button @click="logOut">Sign Out</button>
   </div> 
 
-  <div>
-    <button @click="resetPassword">Forgot Password</button>
-  </div>
 
-  <div class="deleteAccount">
+  <div class="deleteAccount" v-if="userSignedIn">
     <button @click="deleteAccount">Delete Account</button>
   </div> 
 
-  <div class="container">
+  <div class="container" v-if="userSignedIn">
 
     <input v-model="searchName" placeholder="Search games...">
 
@@ -516,7 +497,7 @@ onMounted(()=>{
       @delete="deleteGame"
     />
 
-  <div class="functions">
+  <div class="functions" v-if="userSignedIn">
     <span>
       <button @click="clear">Clear List</button>
     </span>
@@ -533,7 +514,7 @@ onMounted(()=>{
     @submit="handleSubmit"
   />
 
-  <div class="pagination">
+  <div class="pagination" v-if="userSignedIn">
     <span>
       <button
         @click="previousPage"
