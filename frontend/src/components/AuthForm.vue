@@ -4,6 +4,7 @@ import {ref} from "vue"
 
 const email = ref("")
 const password = ref("")
+const confirmPassword = ref("")
 
 const props = defineProps({
 	
@@ -12,15 +13,26 @@ const props = defineProps({
 const emit = defineEmits(["login","signup","reset"])
 
 function login(){
-	emit("login",email,password)
+	emit("login",{
+		email: email.value,
+		password: password.value,})
 }
 
 function signUp(){
-	emit("signup",email,password)	
+	if(confirmPassword !== password){
+		alert("Passwords do not match.")
+		return
+	}
+
+	emit("signup",{
+		email: email.value,
+		password: password.value
+	})
+	
 }
 
 function reset(){
-	emit("reset")
+	emit("reset",email.value)
 }
 
 
@@ -59,7 +71,7 @@ function reset(){
 
 		    <input
 		    	type="password"
-		    	v-model="password"
+		    	v-model="confirmPassword"
 		    	placeholder="Confirm your password"
 		    	hidden="true"/>
 
