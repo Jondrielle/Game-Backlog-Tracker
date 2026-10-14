@@ -2,9 +2,12 @@
 import {ref} from "vue"
 
 
-const email = ref("")
-const password = ref("")
-const confirmPassword = ref("")
+const loginEmail = ref("")
+const loginPassword = ref("")
+
+const signUpEmail = ref("")
+const signUpPassword = ref("")
+const signUpConfirmPassword = ref("")
 
 const props = defineProps({
 	
@@ -14,27 +17,26 @@ const emit = defineEmits(["login","signup","reset"])
 
 function login(){
 	emit("login",{
-		email: email.value,
-		password: password.value,})
+		email: loginEmail.value,
+		password: loginPassword.value,})
 }
 
 function signUp(){
-	if(confirmPassword !== password){
+	if(signUpConfirmPassword.value !== signUpPassword.value){
 		alert("Passwords do not match.")
 		return
 	}
 
 	emit("signup",{
-		email: email.value,
-		password: password.value
+		email: signUpEmail.value,
+		password: signUpPassword.value
 	})
 	
 }
 
 function reset(){
-	emit("reset",email.value)
-}
-
+	emit("reset",loginEmail.value)
+} 
 
 
 </script>
@@ -45,11 +47,11 @@ function reset(){
 			<h3>Login</h3>
 
 		    <input
-		      v-model="email"
+		      v-model="loginEmail"
 		      placeholder="Enter your email"/>
 
 		    <input
-		      v-model="password"
+		      v-model="loginPassword"
 		      placeholder="Enter your password"/>
 
 		    <button @click="login">Login</button>
@@ -61,19 +63,19 @@ function reset(){
 		<div class="signup">
 			<h2>Create Account</h2>
 		    <input 
-		    	v-model="email"
+		    	v-model="signUpEmail"
 		    	placeholder="Enter your email"/>
 
 		    <input 
 		    	type="password"
-		    	v-model="password"
+		    	v-model="signUpPassword"
 		    	placeholder="Create password"/>
 
 		    <input
 		    	type="password"
-		    	v-model="confirmPassword"
+		    	v-model="signUpConfirmPassword"
 		    	placeholder="Confirm your password"
-		    	hidden="true"/>
+		    	/>
 
 		    <button @click="signUp">Sign Up</button>
 		</div>

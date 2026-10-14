@@ -4,6 +4,7 @@ import {ref,onMounted} from 'vue'
 import GameItem from "./components/GameItem.vue"
 import GameForm from "./components/GameForm.vue"
 import AuthForm from "./components/AuthForm.vue"
+import Profile from "./components/Profile.vue"
 
 import {auth} from "./firebase"
 import {createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,sendPasswordResetEmail,sendEmailVerification,deleteUser} from "firebase/auth";
@@ -17,8 +18,6 @@ const igdbResults = ref([])
 const selectedIGDBGame = ref(null)
 
 //authenication 
-const userEmail = ref("")
-const password = ref("")
 const userSignedIn = ref(false)
 
 //pagination
@@ -306,12 +305,12 @@ async function previousPage(){
   }
 }
 
-async function signUp() {
+async function signUp(credentials) {
   try {
     const userCredential = await createUserWithEmailAndPassword(
       auth,
-      userEmail.value,
-      password.value
+      credentials.email,
+      credentials.password
     );
 
     await sendEmailVerification(userCredential.user);
@@ -336,17 +335,15 @@ async function signUp() {
   } catch (err) {
     console.error(err);
   } finally {
-    userEmail.value = "";
-    password.value = "";
   }
 }
 
-async function login() {
+async function login(credentials) {
   try {
     const userCredential = await signInWithEmailAndPassword(
       auth,
-      userEmail.value,
-      password.value
+      credentials.email,
+      credentials.password
     );
 
     const token = await userCredential.user.getIdToken();
@@ -369,8 +366,6 @@ async function login() {
   } catch (err) {
     console.error(err);
   } finally {
-    userEmail.value = "";
-    password.value = "";
   }
 }
 
@@ -385,9 +380,9 @@ async function logOut(){
   }
 }
 
-async function resetPassword(){
+async function resetPassword(email){
   try{
-    await sendPasswordResetEmail(auth,userEmail.value)
+    await sendPasswordResetEmail(auth,email)
     console.log("Password reset sent")
   }catch(err){
     console.error(err)
@@ -425,7 +420,6 @@ async function deleteAccount(){
 }
 
 onMounted(()=>{
-  getGames()
 })
 
 </script>
@@ -433,11 +427,14 @@ onMounted(()=>{
 <template>
   <h1 class="title">Game Backlog Tracker</h1>
   <AuthForm
-    :email="userEmail"
-    :password="userPassword"
     @login="login"
-    @signUp="signUp"
+    @signup="signUp"
     @reset="resetPassword"
+  />
+
+  <Profile
+    @signout="logOut"
+    v-if="userSignedIn"
   />
 
   <div class="signOut" v-if="userSignedIn">
