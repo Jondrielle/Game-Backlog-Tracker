@@ -88,24 +88,31 @@ function reset(){
 		display:flex;
 		gap:50px;
 		width:max-screen-width;
-		border:2px solid green;
+		justify-content:center;
+		align-items:center;
+		height:80vh;
 	}
 
 	.login{
 		display:flex;
 		flex-direction:column;
-  		border: 1px solid red;
 		border-radius:5px;
-		border-color:red;
+		width: calc(100% / 2);
+		height:calc(100% / 1);
+		justify-content:center;
+		align-items:center;
 		gap:10px;
 	}
 
 	.signup{
 		display:flex;
 		flex-direction:column;
-		border: 1px solid red;
 		border-radius:5px;
-		border-color:red;
+		width: calc(100% / 2);
+		height:calc(100% / 1);
+		justify-content:center;
+		align-items:center;
+
 		gap:10px;
 	}
 
