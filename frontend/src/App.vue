@@ -22,7 +22,7 @@ const userSignedIn = ref(false)
 
 //pagination
 const currentPage = ref(1)
-const pageSize = 10
+const pageSize = 2
 const totalGames = ref(0)
 
 //filter params
@@ -207,17 +207,17 @@ async function addGame(game){
     const result = await response.json()
 
     games.value.push(result)
-
+    
     formGame.value={
-      id:null,
-      name:"",
-      status:"",
-      rating:null,
-      notes:"",
-      platform:"",
-      genres:[],
-      release_date:"",
-      date_completed:null
+          id:null,
+          name:"",
+          status:"",
+          rating:null,
+          notes:"",
+          platform:"",
+          genres:[],
+          release_date:"",
+          date_completed:null
     }
 
   }catch(err){
@@ -523,6 +523,10 @@ async function deleteAccount(){
 function selectIGDBGame(game) {
   selectedIGDBGame.value = game
 
+  igdbResults.value = []
+  igdbSearch.value = ""
+  selectedIGDBGame.value = null
+
   formGame.value = {
     id: null,
     name: game.name,
@@ -547,6 +551,7 @@ onMounted(()=>{
 <template>
   <h1 class="title">Game Backlog Tracker</h1>
   <AuthForm
+    v-if="!userSignedIn"
     @login="login"
     @signup="signUp"
     @reset="resetPassword"
@@ -556,22 +561,13 @@ onMounted(()=>{
     @signout="logOut"
     @delete="deleteAccount"
     v-if="userSignedIn"
-  />
-
-  <div class="signOut" v-if="userSignedIn">
-    <button @click="logOut">Sign Out</button>
-  </div> 
-
-
-  <div class="deleteAccount" v-if="userSignedIn">
-    <button @click="deleteAccount">Delete Account</button>
-  </div> 
+  /> 
 
   <div class="container" v-if="userSignedIn">
 
     <input v-model="searchName" placeholder="Search games...">
     <div class="igdb-search">
-  <h2>Find Games</h2>
+  <label>Find Games</label>
 
   <form @submit.prevent="searchIGDB">
     <input
@@ -582,8 +578,10 @@ onMounted(()=>{
     <button type="submit">
       Search IGDB
     </button>
+
   </form>
 
+  <hr class="horizontal-line">
   <p v-if="igdbResults.length === 0 && igdbSearch">
     No results displayed yet. Search for a game to find matches.
   </p>
@@ -612,62 +610,69 @@ onMounted(()=>{
     </button>
   </div>
 </div>
-    <select v-model="selectedStatus">
-      <option :value="null">All Statuses</option>
-      <option value="Backlog">Backlog</option>
-      <option value="Playing">Playing</option>
-      <option value="Completed">Completed</option>
-      <option value="Dropped">Dropped</option>
-    </select>
+  <div class="userGames">
+    <label>My Games</label>
+    <div class="filters">
+      <span>
+        <select v-model="selectedStatus">
+          <option :value="null">All Statuses</option>
+          <option value="Backlog">Backlog</option>
+          <option value="Playing">Playing</option>
+          <option value="Completed">Completed</option>
+          <option value="Dropped">Dropped</option>
+        </select>
+      </span>
 
-    <select v-model="selectedGenre">
-      <option :value="null">All Genres</option>
-      <option value="Action">Action</option>
-      <option value="Adventure">Adventure</option>
-      <option value="RPG">RPG</option>
-      <option value="Strategy">Strategy</option>
-      <option value="Simulation">Simulation</option>
-      <option value="Sports">Sports</option>
-      <option value="Racing">Racing</option>
-      <option value="Puzzle">Puzzle</option>
-      <option value="Horror">Horror</option>
-      <option value="Platformer">Platformer</option>
-      <option value="Shooter">Shooter</option>
-      <option value="Fighting">Fighting</option>
-    </select>
+      <span>
+        <select v-model="selectedGenre">
+          <option :value="null">All Genres</option>
+          <option value="Action">Action</option>
+          <option value="Adventure">Adventure</option>
+          <option value="RPG">RPG</option>
+          <option value="Strategy">Strategy</option>
+          <option value="Simulation">Simulation</option>
+          <option value="Sports">Sports</option>
+          <option value="Racing">Racing</option>
+          <option value="Puzzle">Puzzle</option>
+          <option value="Horror">Horror</option>
+          <option value="Platformer">Platformer</option>
+          <option value="Shooter">Shooter</option>
+          <option value="Fighting">Fighting</option>
+        </select>
+      </span>
 
-    <select v-model="selectedPlatform">
-      <option :value="null">All Platforms</option>
-      <option value="PC">PC</option>
-      <option value="PlayStation">PlayStation</option>
-      <option value="Xbox">Xbox</option>
-      <option value="Switch">Switch</option>
-    </select>
+      <span>
+        <select v-model="selectedPlatform">
+          <option :value="null">All Platforms</option>
+          <option value="PC">PC</option>
+          <option value="PlayStation">PlayStation</option>
+          <option value="Xbox">Xbox</option>
+          <option value="Switch">Switch</option>
+        </select>
+      </span>
+    </div>
+      <GameItem
+        v-for="game in games"
+        :key="game.id"
+        :game="game"
+        @edit="startEdit"
+        @delete="deleteGame"
+      />
+      <button @click="getGames">
+        Apply Filters
+      </button>
 
-    <button @click="getGames">
-      Apply Filters
-    </button>
+      <button @click="clearFilters">
+        Clear Filters
+      </button>
 
-    <button @click="clearFilters">
-      Clear Filters
-    </button>
-
+    </div>
   </div>
 
-    <GameItem
-      v-for="game in games"
-      :key="game.id"
-      :game="game"
-      @edit="startEdit"
-      @delete="deleteGame"
-    />
 
   <div class="functions" v-if="userSignedIn">
     <span>
       <button @click="clear">Clear List</button>
-    </span>
-    <span>
-      <button @click="openForm">Open Add Form</button>
     </span>
   </div>
 
@@ -703,58 +708,193 @@ onMounted(()=>{
 </template>
 
 <style scoped>
-  .title{
-    flex-direction:column;
-    text-align:center;
-  }
+  
+/* Overall page */
+:global(body) {
+  margin: 0;
+  background: #10131b;
+  color: #e8eaf2;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
 
-  .pagination{
-    padding-top:25px;
-    display: grid;
-    grid-template-columns:repeat(3,1fr)
-  }
+:global(*) {
+  box-sizing: border-box;
+}
 
-  .container{
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-    padding-bottom:20px;
-  }
+:global(button),
+:global(input),
+:global(select) {
+  font: inherit;
+}
 
-  .container > input{
-    border-radius:5px;
-    border-color:light-gray;
-    padding-bottom:10px;
-  }
+:global(button) {
+  padding: 10px 16px;
+  border: 1px solid #49415f;
+  border-radius: 8px;
+  background: #29243a;
+  color: #f4f0ff;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
 
-  .functions{
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    text-align:center;
-  }
+:global(button:hover:not(:disabled)) {
+  background: #443663;
+  transform: translateY(-1px);
+}
 
-  .igdb-search {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px 0;
+:global(button:disabled) {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+:global(input),
+:global(select) {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #353b4b;
+  border-radius: 8px;
+  background: #191e29;
+  color: #e8eaf2;
+}
+
+:global(input:focus),
+:global(select:focus) {
+  outline: 2px solid #a78bfa;
+  outline-offset: 1px;
+}
+
+.title {
+  margin: 0 0 28px;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  letter-spacing: 0.04em;
+  color: #c4b5fd;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px;
+  background: #191e29;
+  border: 1px solid #2b3242;
+  border-radius: 16px;
+}
+
+.container > input {
+  width: 100%;
+}
+
+.igdb-search {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.igdb-search label,
+.userGames > label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #c4b5fd;
+}
+
+.igdb-search form {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.igdb-search input {
+  flex: 1;
+}
+
+.horizontal-line {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #353b4b;
+  margin: 8px 0;
+}
+
+.igdb-result {
+  padding: 16px;
+  border: 1px solid #353b4b;
+  border-radius: 12px;
+  background: #202635;
+}
+
+.igdb-result h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.igdb-result p {
+  color: #b8bfd0;
+  margin: 6px 0;
+}
+
+.igdb-result button {
+  margin-top: 8px;
+}
+
+.userGames {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.filters span {
+  flex: 1 1 160px;
+}
+
+.filters select {
+  width: 100%;
+}
+
+/* GameItem components will need their own styling
+   in GameItem.vue if they contain the game cards. */
+
+.functions {
+  display: flex;
+  justify-content: center;
+  width: min(1100px, calc(100% - 32px));
+  margin: 20px auto;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 24px 16px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    width: calc(100% - 20px);
+    padding: 16px;
   }
 
   .igdb-search form {
-    display: flex;
-    gap: 8px;
+    flex-direction: column;
   }
 
-  .igdb-search input {
-    flex: 1;
-    min-width: 0;
-    padding: 10px;
+  .filters {
+    flex-direction: column;
   }
 
-  .igdb-result {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+  .pagination {
+    gap: 10px;
   }
-
+}
 </style>
