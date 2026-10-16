@@ -4,13 +4,15 @@ from routes.games import game_router
 from routes.igdb import router as igdb_router
 from routes.auth import auth_router
 
-from firebase_setup import firebase_app
+from firebase_setup import initialize_firebase
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine
 from models.game import Game
 from models.user import User
 from sqlmodel import SQLModel
+
+initialize_firebase()
 
 app = FastAPI()
 

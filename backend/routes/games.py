@@ -5,7 +5,10 @@ from sqlmodel import Session, select
 from sqlalchemy import func
 from database import get_session
 from models.game import Game, Genre, GenreGame
+from models.user import User
 from typing import Optional
+from routes.auth import get_current_user
+
 
 
 game_router = APIRouter()
@@ -31,12 +34,14 @@ async def get_games(
     genre: Optional[GenreEnum] = None,
     platform: Optional[Platform] = None,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 10
 ):
 
     # Build the main game query
-    statement = select(Game)
+    statement = select(Game).where(
+        Game.user_id == current_user.id)
 
     if name is not None:
         statement = statement.where(
@@ -67,7 +72,8 @@ async def get_games(
     # Count matching games
     count_statement = select(
         func.count(func.distinct(Game.id))
-    ).select_from(Game)
+    ).select_from(Game).where(
+        Game.user_id == current_user.id)
 
     if name is not None:
         count_statement = count_statement.where(
@@ -112,10 +118,13 @@ async def get_games(
 @game_router.get("/game/{game_id}", response_model=GameRead)
 async def get_game(
     game_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
 
-    statement = select(Game).where(Game.id == game_id)
+    statement = select(Game).where(
+        Game.id == game_id,
+        Game.user_id == current_user.id)
 
     game = session.exec(statement).first()
 
@@ -132,10 +141,12 @@ async def get_game(
 @game_router.post("/", response_model=GameRead)
 async def create_game(
     game: CreateGame,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
 
     new_game = Game(
+        user_id=current_user.id,
         name=game.name,
         status=game.status,
         rating=game.rating,
@@ -184,44 +195,52 @@ async def create_game(
 
 
 # Delete a single game
+
 @game_router.delete("/game/{game_id}")
 async def delete_game(
     game_id: int,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ):
-
-    statement = select(Game).where(
-        Game.id == game_id
-    )
-
-    game = session.exec(statement).first()
+    game = session.exec(
+        select(Game).where(
+            Game.id == game_id,
+            Game.user_id == current_user.id,
+        )
+    ).first()
 
     if game is None:
         raise HTTPException(
             status_code=404,
-            detail="Game not found"
+            detail="Game not found",
         )
 
     session.delete(game)
     session.commit()
 
-    return {
-        "message": "Game Deleted Successfully"
-    }
+    return {"message": "Game deleted successfully"}
 
 
 # Clear all games
 @game_router.delete("/game")
 async def clear(
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
 
     statement = select(Game)
 
-    games = session.exec(statement).all()
+    game = session.exec(
+        select(Game).where(
+            Game.user_id == current_user.id,
+        )
+    ).all()
 
-    for game in games:
-        session.delete(game)
+    if game is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Game not found",
+        )
 
     session.commit()
 
@@ -231,18 +250,17 @@ async def clear(
 
 
 # Update a game
-@game_router.patch(
-    "/game/{game_id}",
-    response_model=GameRead
-)
+@game_router.patch("/game/{game_id}",response_model=GameRead)
 async def update_game(
     game_id: int,
     updated_game: UpdateGame,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
 
     statement = select(Game).where(
-        Game.id == game_id
+        Game.id == game_id,
+        Game.user_id == current_user.id
     )
 
     game = session.exec(statement).first()

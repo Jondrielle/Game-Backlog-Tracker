@@ -48,8 +48,56 @@ const formGame = ref({
 const isEditing = ref(false)
 const showForm = ref(false)
 
+async function searchIGDB() {
+  const query = igdbSearch.value.trim()
+
+  if (!query) {
+    igdbResults.value = []
+    return
+  }
+
+  const user = auth.currentUser
+
+  if (!user) {
+    console.error("Please sign in first.")
+    return
+  }
+
+  try {
+    const token = await user.getIdToken()
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/search?q=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(await response.text())
+    }
+
+    igdbResults.value = await response.json()
+  } catch (err) {
+    console.error("IGDB search failed:", err)
+    igdbResults.value = []
+  }
+}
+
 async function getGames(){
   try{
+
+    const user = auth.currentUser
+
+    if (!user) {
+      games.value = []
+      totalGames.value = 0
+      return
+    }
+
+    const token = await user.getIdToken()
 
     const params = new URLSearchParams()
 
@@ -75,7 +123,13 @@ async function getGames(){
 
     console.log(params.toString())
 
-    const response = await fetch(`http://127.0.0.1:8000/?${params.toString()}`)
+    const response = await fetch(`http://127.0.0.1:8000/?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
 
     if(!response.ok){
       throw new Error(`Response status: ${response.status}`)
@@ -111,12 +165,21 @@ async function getGame(id){
 
 async function addGame(game){
   try{
+
+    const user = auth.currentUser
+
+    if (!user) {
+      throw new Error("You must be signed in to add a game.")
+    }
+
+    const token = await user.getIdToken()
+
     const response = await fetch("http://127.0.0.1:8000/",
     {
       method:"POST",
       headers:{
-        "Content-Type":
-        "application/json"
+        "Content-Type":"application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         name:game.name,
@@ -135,6 +198,8 @@ async function addGame(game){
         throw new Error("Please check required fields.")
       }
 
+      const errors = await response.json()
+      console.log(errors)
       throw new Error("Failed to add game");
 
     }
@@ -162,8 +227,20 @@ async function addGame(game){
 
 async function deleteGame(id){
   try{
+
+    const user = auth.currentUser
+
+
+    if(!user){
+      throw new Error("You must be signed in first before deleting a game")
+    }
+
+    const token = await user.getIdToken()
     const response = await fetch(`http://127.0.0.1:8000/game/${id}`,{
-        method:"DELETE"
+        method:"DELETE",
+        headers:{
+          Authorization: `Bearer ${token}`
+        },
       }
     )
 
@@ -183,8 +260,20 @@ async function deleteGame(id){
 
 async function clear(){
   try{
+
+    const user = auth.currentUser
+
+    if(!user){
+      throw new Error("You must be signed in to clear a list")
+    }
+
+    const token = await user.getIdToken()
+
     const response = await fetch("http://127.0.0.1:8000/game",{
-      method:"DELETE"
+      method:"DELETE",
+      headers:{
+        Authorization: `Bearer ${token}`,
+      },
     })
 
     if(!response.ok){
@@ -201,11 +290,20 @@ async function clear(){
 
 async function updateGame(updatedGame){
   try{
+
+    const user = auth.currentUser
+
+    if (!user) {
+      throw new Error("You must be signed in to add a game.")
+    }
+
+    const token = await user.getIdToken()
+
     const response = await fetch(`http://127.0.0.1:8000/game/${updatedGame.id}`,{
       method:"PATCH",
       headers:{
-        "Content-Type":
-        "application/json"
+        "Content-Type":"application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(updatedGame)
     })
@@ -240,7 +338,7 @@ async function updateGame(updatedGame){
 function startEdit(game){
   formGame.value = {
     ...game,
-    genres: [...game.genres]
+    genres: [...(game.genres ?? [])],
   }
 
   isEditing.value = true
@@ -315,7 +413,7 @@ async function signUp(credentials) {
 
     await sendEmailVerification(userCredential.user);
 
-    const token = await userCredential.user.getIdToken();
+    const token = await userCredential.user.getIdToken(true);
 
 
     const response = await fetch("http://127.0.0.1:8000/auth/signup", {
@@ -326,7 +424,10 @@ async function signUp(credentials) {
     });
 
     if (!response.ok) {
-      throw new Error(await response.text());
+      const errorText = await response.text();
+      console.error("Backend status:", response.status);
+      console.error("Backend response:", errorText);
+      return;
     }
 
     userSignedIn.value = true
@@ -346,7 +447,7 @@ async function login(credentials) {
       credentials.password
     );
 
-    const token = await userCredential.user.getIdToken();
+    const token = await userCredential.user.getIdToken(true);
 
     const response = await fetch("http://127.0.0.1:8000/auth/me", {
       method: "GET",
@@ -419,6 +520,25 @@ async function deleteAccount(){
   userSignedIn.value = false
 }
 
+function selectIGDBGame(game) {
+  selectedIGDBGame.value = game
+
+  formGame.value = {
+    id: null,
+    name: game.name,
+    status: "Backlog",
+    rating: null,
+    notes: "",
+    platform: game.platforms?.[0] || "",
+    genres: game.genres || [],
+    release_date: game.release_date || "",
+    date_completed: null,
+  }
+
+  isEditing.value = false
+  showForm.value = true
+}
+
 onMounted(()=>{
 })
 
@@ -434,6 +554,7 @@ onMounted(()=>{
 
   <Profile
     @signout="logOut"
+    @delete="deleteAccount"
     v-if="userSignedIn"
   />
 
@@ -449,7 +570,48 @@ onMounted(()=>{
   <div class="container" v-if="userSignedIn">
 
     <input v-model="searchName" placeholder="Search games...">
+    <div class="igdb-search">
+  <h2>Find Games</h2>
 
+  <form @submit.prevent="searchIGDB">
+    <input
+      v-model="igdbSearch"
+      placeholder="Search IGDB for a game..."
+    />
+
+    <button type="submit">
+      Search IGDB
+    </button>
+  </form>
+
+  <p v-if="igdbResults.length === 0 && igdbSearch">
+    No results displayed yet. Search for a game to find matches.
+  </p>
+
+  <div
+    v-for="game in igdbResults"
+    :key="game.igdb_id ?? game.id"
+    class="igdb-result"
+  >
+    <h3>{{ game.name }}</h3>
+
+    <p v-if="game.release_date">
+      Release date: {{ game.release_date }}
+    </p>
+
+    <p v-if="game.genres?.length">
+      Genres: {{ game.genres.join(", ") }}
+    </p>
+
+    <p v-if="game.platforms?.length">
+      Platforms: {{ game.platforms.join(", ") }}
+    </p>
+
+    <button @click="selectIGDBGame(game)">
+      Use This Game
+    </button>
+  </div>
+</div>
     <select v-model="selectedStatus">
       <option :value="null">All Statuses</option>
       <option value="Backlog">Backlog</option>
@@ -569,6 +731,30 @@ onMounted(()=>{
     display:grid;
     grid-template-columns:repeat(2, 1fr);
     text-align:center;
+  }
+
+  .igdb-search {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  .igdb-search form {
+    display: flex;
+    gap: 8px;
+  }
+
+  .igdb-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px;
+  }
+
+  .igdb-result {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
   }
 
 </style>

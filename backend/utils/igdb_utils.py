@@ -1,87 +1,93 @@
+
 import os
 import httpx
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timezone
 
 load_dotenv()
 
+TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
+IGDB_GAMES_URL = "https://api.igdb.com/v4/games"
+
 
 def get_client_id():
-	return os.getenv("IGDB_CLIENT_ID")
+    return os.getenv("IGDB_CLIENT_ID")
 
 
 def get_client_secret():
-	return os.getenv("IGDB_CLIENT_SECRET")
+    return os.getenv("IGDB_CLIENT_SECRET")
 
 
 async def get_access_token():
-	client_id = get_client_id()
-	client_secret = get_client_secret()
+    client_id = get_client_id()
+    client_secret = get_client_secret()
 
-	async with httpx.AsyncClient() as client:
-		response = await client.post(
-			"https://id.twitch.tv/oauth2/token",
-			params={
-				"client_id": client_id,
-				"client_secret": client_secret,
-				"grant_type": "client_credentials"
-			}
-		)
+    if not client_id or not client_secret:
+        raise RuntimeError("IGDB credentials are not configured")
 
-	response.raise_for_status()
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        response = await client.post(
+            TWITCH_TOKEN_URL,
+            params={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "grant_type": "client_credentials",
+            },
+        )
+        response.raise_for_status()
 
-	data = response.json()
-
-	return data["access_token"]
+    return response.json()["access_token"]
 
 
-async def search_games(name):
-	access_token = await get_access_token()
+async def search_games(name: str):
+    name = name.strip()
 
-	async with httpx.AsyncClient() as client:
-		response = await client.post(
-		"https://api.igdb.com/v4/games",
-		headers={
-			"Client-ID": get_client_id(),
-			"Authorization": f"Bearer {access_token}"
-		},
-		content=f'''
-			search "{name}";
-			fields name, platforms.name, genres.name, first_release_date;
-			limit 10;
-		'''
-		)
+    if not name:
+        return []
 
-		response.raise_for_status()
-		games = response.json()
+    access_token = await get_access_token()
 
-	return [
-		format_game(game)
-		for game in games
-	]
+    # Escape characters that could interfere with the IGDB query.
+    safe_name = name.replace("\\", "\\\\").replace('"', '\\"')
 
+    query = f'''
+        search "{safe_name}";
+        fields id, name, platforms.name, genres.name, first_release_date;
+        limit 10;
+    '''
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        response = await client.post(
+            IGDB_GAMES_URL,
+            headers={
+                "Client-ID": get_client_id(),
+                "Authorization": f"Bearer {access_token}",
+            },
+            content=query,
+        )
+        response.raise_for_status()
+
+    return [format_game(game) for game in response.json()]
 
 
 def format_game(game):
-	release_date = None
+    timestamp = game.get("first_release_date")
 
-	if "first_release_date" in game:
-		release_date = datetime.fromtimestamp(
-            game["first_release_date"]
-        ).strftime("%Y-%m-%d")
+    release_date = (
+        datetime.fromtimestamp(timestamp, tz=timezone.utc)
+        .strftime("%Y-%m-%d")
+        if timestamp is not None
+        else None
+    )
 
-        
-	return {
-        "id": game["id"],
+    return {
+        "igdb_id": game["id"],
         "name": game["name"],
         "genres": [
-            genre["name"]
-            for genre in game.get("genres", [])
+            genre["name"] for genre in game.get("genres", [])
         ],
         "platforms": [
-            platform["name"]
-            for platform in game.get("platforms", [])
+            platform["name"] for platform in game.get("platforms", [])
         ],
-        "release_date": release_date
+        "release_date": release_date,
     }
-

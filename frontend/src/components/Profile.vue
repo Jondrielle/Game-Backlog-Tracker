@@ -1,8 +1,12 @@
 <script setup>
-const emit = defineEmits(["signout"])
+const emit = defineEmits(["signout","delete"])
 
 function signOut(){
 	emit("signout")
+}
+
+function deleteAccount(){
+	emit("delete")
 }
 </script>
 
@@ -13,7 +17,7 @@ function signOut(){
 		<div class="account">
 			<button @click="signOut">Sign Out</button>
 			<button>Edit Profile</button>
-			<button>Delete Account</button>
+			<button @click="delete">Delete Account</button>
 		</div>
 	</div>
 </template>
