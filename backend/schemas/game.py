@@ -6,6 +6,7 @@ from enums.enum import Platform, Status, Genre as GenreEnum
 
 class GameBase(BaseModel):
     name: str
+    cover_url: Optional[str] = Field(default=None)
     status: Status
     rating: Optional[int] = Field(default=None, ge=1, le=5)
     notes: Optional[str] = Field(default=None, max_length=500)
@@ -18,6 +19,7 @@ class GameBase(BaseModel):
 class GameRead(BaseModel):
     id: int
     name: str
+    cover_url: Optional[str] = Field(default=None)
     status: Status
     rating: Optional[int] = None
     notes: Optional[str] = None
@@ -33,6 +35,7 @@ class CreateGame(GameBase):
 
 class UpdateGame(BaseModel):
     name: Optional[str] = None
+    cover_url: Optional[str] = Field(default=None)
     status: Optional[Status] = None
     rating: Optional[int] = Field(default=None, ge=1, le=5)
     notes: Optional[str] = Field(default=None, max_length=500)

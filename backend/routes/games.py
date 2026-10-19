@@ -17,6 +17,7 @@ def game_to_response(game: Game):
     return {
         "id": game.id,
         "name": game.name,
+        "cover_url":game.cover_url,
         "status": game.status,
         "rating": game.rating,
         "notes": game.notes,
@@ -148,6 +149,7 @@ async def create_game(
     new_game = Game(
         user_id=current_user.id,
         name=game.name,
+        cover_url=game.cover_url,
         status=game.status,
         rating=game.rating,
         notes=game.notes,
@@ -230,17 +232,20 @@ async def clear(
 
     statement = select(Game)
 
-    game = session.exec(
+    games = session.exec(
         select(Game).where(
             Game.user_id == current_user.id,
         )
     ).all()
 
-    if game is None:
+    if games is None:
         raise HTTPException(
             status_code=404,
-            detail="Game not found",
+            detail="Games not found",
         )
+
+    for game in games:
+        session.delete(game)
 
     session.commit()
 
@@ -274,6 +279,9 @@ async def update_game(
     # Update normal fields
     if updated_game.name is not None:
         game.name = updated_game.name
+
+    if updated_game.cover_url is not None:
+        game.cover_url = updated_game.cover_url
 
     if updated_game.status is not None:
         game.status = updated_game.status

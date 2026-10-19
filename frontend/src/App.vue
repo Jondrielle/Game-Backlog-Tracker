@@ -35,6 +35,7 @@ const searchName = ref("")
 const formGame = ref({
   id: null,
   name: "",
+  cover_url: null, 
   status: "",
   rating: null,
   notes: "",
@@ -183,6 +184,7 @@ async function addGame(game){
       },
       body: JSON.stringify({
         name:game.name,
+        cover_url: game.cover_url,
         status:game.status,
         rating:game.rating,
         notes:game.notes,
@@ -211,6 +213,7 @@ async function addGame(game){
     formGame.value={
           id:null,
           name:"",
+          cover_url:null,
           status:"",
           rating:null,
           notes:"",
@@ -321,6 +324,7 @@ async function updateGame(updatedGame){
     formGame.value = ({
     id: null,
     name: "",
+    cover_url: null, 
     status: "",
     rating: null,
     notes: "",
@@ -530,6 +534,7 @@ function selectIGDBGame(game) {
   formGame.value = {
     id: null,
     name: game.name,
+    cover_url:game.cover_url ?? null,
     status: "Backlog",
     rating: null,
     notes: "",
@@ -592,7 +597,11 @@ onMounted(()=>{
     class="igdb-result"
   >
     <h3>{{ game.name }}</h3>
-
+    <img
+      v-if="game.cover_url"
+      :src="game.cover_url"
+      :alt="`${game.name} cover`"
+    />
     <p v-if="game.release_date">
       Release date: {{ game.release_date }}
     </p>
@@ -764,7 +773,7 @@ onMounted(()=>{
 }
 
 .title {
-  margin: 0 0 28px;
+  margin: 60px 0 28px;
   padding: 28px 16px;
   text-align: center;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
@@ -777,8 +786,8 @@ onMounted(()=>{
   flex-direction: column;
   gap: 24px;
   width: min(1100px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 24px;
+  margin: 110px auto;
+  padding: 32px;
   background: #191e29;
   border: 1px solid #2b3242;
   border-radius: 16px;
@@ -861,9 +870,6 @@ onMounted(()=>{
   width: 100%;
 }
 
-/* GameItem components will need their own styling
-   in GameItem.vue if they contain the game cards. */
-
 .functions {
   display: flex;
   justify-content: center;
@@ -895,6 +901,14 @@ onMounted(()=>{
 
   .pagination {
     gap: 10px;
+  }
+
+  .game-cover {
+    display: block;
+    width: 140px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 8px;
   }
 }
 </style>

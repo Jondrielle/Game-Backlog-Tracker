@@ -12,6 +12,7 @@ class Game(SQLModel,table=True):
 	id: Optional[int] = Field(default=None, primary_key=True)
 	user_id: int = Field(foreign_key="user.id")
 	name: str
+	cover_url: Optional[str] = Field(default=None)
 	status: Status
 	rating: Optional[int] = Field(default=None,ge=1,le=5)
 	notes:Optional[str] = Field(default=None, max_length = 500)

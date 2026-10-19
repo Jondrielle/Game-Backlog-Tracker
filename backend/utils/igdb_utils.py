@@ -52,7 +52,7 @@ async def search_games(name: str):
 
     query = f'''
         search "{safe_name}";
-        fields id, name, platforms.name, genres.name, first_release_date;
+        fields id, name, cover.image_id,platforms.name, genres.name, first_release_date;
         limit 10;
     '''
 
@@ -67,6 +67,12 @@ async def search_games(name: str):
         )
         response.raise_for_status()
 
+    games = [format_game(game) for game in response.json()]
+
+    for game in games:
+        print(game["name"], "->", game["cover_url"])
+
+    return games
     return [format_game(game) for game in response.json()]
 
 
@@ -80,9 +86,20 @@ def format_game(game):
         else None
     )
 
+    cover = game.get("cover")
+    image_id = cover.get("image_id") if cover else None
+
+    # Build the URL only if IGDB provides an image ID.
+    cover_url = (
+        f"https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.jpg"
+        if image_id
+        else None
+    )
+
     return {
         "igdb_id": game["id"],
         "name": game["name"],
+        "cover_url": cover_url,
         "genres": [
             genre["name"] for genre in game.get("genres", [])
         ],
