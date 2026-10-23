@@ -226,6 +226,7 @@ Depending on the current implementation, endpoints may support operations such a
 - Adding a game
 - Retrieving an individual game
 - Updating game information
+- Clearing all games
 - Deleting a game
 - Searching for external game metadata
 
