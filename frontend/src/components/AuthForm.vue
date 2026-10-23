@@ -84,13 +84,25 @@ function reset(){
 
 <style scoped>
 
-	.auth{
-		display:flex;
-		gap:50px;
-		width:max-screen-width;
-		justify-content:center;
-		align-items:center;
-		height:80vh;
+	.auth {
+	  display: flex;
+	  gap: 50px;
+	  justify-content: center;
+	  align-items: center;
+	  min-height: 100vh;
+	  padding: 40px;
+	  box-sizing: border-box;
+
+	  background-image:
+	    linear-gradient(
+	      rgba(16, 19, 27, 0.65),
+	      rgba(16, 19, 27, 0.85)
+	    ),
+	    url('/auth-background.jpg');
+
+	  background-size: cover;
+	  background-position: center;
+	  background-repeat: no-repeat;
 	}
 
 	.login{
@@ -126,5 +138,14 @@ function reset(){
 		display:flex;
 		flex-direction:column;
 		gap:15px;
+	}
+
+	.login,
+	.signup {
+	  background: #10131b;
+	  color: #e8eaf2;
+	  padding: 32px;
+	  border-radius: 16px;
+	  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
 	}
 </style>
