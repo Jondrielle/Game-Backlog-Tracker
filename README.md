@@ -301,3 +301,29 @@ This project provides practical experience with:
 - LinkedIn: https://www.linkedin.com/in/jondrielle-wilson
 - Portfolio: https://jondriellewilson.wixsite.com/jondrielle-wilson
 
+## ⚠️ Known Limitations
+
+Game Backlog Tracker is an ongoing learning project focused on full-stack development, API design, authentication, and database integration. Some development practices have not yet been implemented, as the current priority is building a functional application and strengthening my understanding of the underlying technologies.
+
+- **Containerization:** The application does not yet have a Docker-based development environment. Docker and Docker Compose could simplify setup and improve consistency across environments.
+- **Database migrations:** Database schema changes are not yet managed through a dedicated migration workflow. Alembic could provide a structured way to manage schema changes.
+- **Automated testing:** Unit and integration test coverage is limited or not yet implemented. Tests for API endpoints, authentication, database operations, and frontend behavior would improve reliability.
+- **Continuous integration:** GitHub Actions workflows have not yet been implemented to automate tasks such as running tests, checking code quality, or validating builds when changes are pushed.
+- **Deployment automation:** The development and deployment workflow could be improved through more consistent environment configuration and automation.
+- **Error handling and edge cases:** Additional testing and error handling are needed to cover unexpected API responses and edge cases.
+- **External API dependency:** Game metadata retrieval depends on the availability and behavior of the IGDB API, including its authentication requirements and rate limits.
+
+### Development Priorities
+
+These areas are recognized opportunities for improvement, but they are not all immediate requirements. The current focus is on completing the core application and understanding how the frontend, backend, authentication, external API, and database work together.
+
+Potential future improvements include:
+
+- Docker and Docker Compose for containerized development.
+- Alembic for database schema migrations.
+- Pytest and frontend testing tools for unit and integration testing.
+- GitHub Actions for automated testing, linting, and build verification.
+- Improved environment configuration and deployment workflows.
+
+The goal is to introduce these practices incrementally as the application evolves, rather than adding complexity before understanding the fundamentals.
+
