@@ -436,6 +436,9 @@ async function signUp(credentials) {
 
     userSignedIn.value = true
 
+    currentPage.value = 1
+    await getGames()
+
     console.log("User created and backend user registered");
   } catch (err) {
     console.error(err);
@@ -466,6 +469,9 @@ async function login(credentials) {
 
     const user = await response.json();
     userSignedIn.value = true
+
+    currentPage.value = 1
+    await getGames()
 
     console.log("Login successful", user);
   } catch (err) {
@@ -549,6 +555,7 @@ function selectIGDBGame(game) {
 }
 
 onMounted(()=>{
+  getGames()
 })
 
 </script>
